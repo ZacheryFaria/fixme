@@ -1,5 +1,7 @@
 package zfaria.fixme.core.notation;
 
+import io.netty.buffer.ByteBuf;
+
 import java.rmi.NoSuchObjectException;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +99,7 @@ public class Fix {
 
 
     public byte[] serialize() {
+        size = calcSize();
         byte[] buf = new byte[getTotalLength()];
         int len = 0;
         for (byte b : version.encode()) {
@@ -122,5 +125,17 @@ public class Fix {
         }
         buf[len++] = (byte)1;
         return buf;
+    }
+
+    public String toString() {
+        byte[] buf = serialize();
+        StringBuilder sb = new StringBuilder(buf.length);
+        for (byte b : buf) {
+            if (b == 1)
+                sb.append('|');
+            else
+                sb.append((char)b);
+        }
+        return sb.toString();
     }
 }

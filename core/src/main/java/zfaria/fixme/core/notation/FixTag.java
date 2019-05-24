@@ -29,6 +29,8 @@ public class FixTag {
     public static final String ROUTING_RECEIVER_ID = "56";
     public static final String SYMBOL_TYPE = "55";
     public static final String SUM_TYPE = "10";
+    public static final String MSG_CONNECT = "A";
+    public static final String CONNECT_ID = "77";
 
     public FixTag(String type, String value) {
         this.type = type;

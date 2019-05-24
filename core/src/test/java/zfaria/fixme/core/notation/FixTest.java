@@ -25,6 +25,11 @@ public class FixTest {
         Fix f = new Fix(s.getBytes());
 
         assertEquals("65", f.calcSize().getValue());
+
+        Fix f2 = new Fix(FixTag.MSG_CONNECT);
+        f2.addTag(new FixTag(FixTag.CONNECT_ID, 100000 + ""));
+
+        assertEquals("15", f2.calcSize().getValue());
     }
 
     @Test
@@ -53,8 +58,6 @@ public class FixTest {
 
 
         assertEquals(ft, f.getTag(FixTag.PURCH_TYPE));
-
-        System.out.println(asString(f.serialize()));
     }
 
     @Test
