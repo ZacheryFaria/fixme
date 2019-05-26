@@ -13,15 +13,19 @@ import java.util.Map;
 
 public class FixChannelHandler extends ChannelInboundHandlerAdapter {
 
-    private static int clientID = 100000;
+    private static int marketID = 100000;
+    private static int brokerID = 200000;
 
     private static Map<Integer, ChannelHandlerContext> connections;
+
+    private boolean broker;
 
     static {
         connections = new HashMap<>();
     }
 
-    public FixChannelHandler() {
+    public FixChannelHandler(int brokerPort) {
+        broker = brokerPort == 5000;
     }
 
     private ChannelHandlerContext getContext(Fix f) {
@@ -41,11 +45,12 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        int id = broker ? brokerID++ : marketID++;
         Fix fix = new Fix(FixTag.MSG_CONNECT);
-        fix.addTag(new FixTag(FixTag.CONNECT_ID, clientID + ""));
+        fix.addTag(new FixTag(FixTag.CONNECT_ID, id + ""));
         ctx.write(Unpooled.copiedBuffer(fix.serialize()));
-        connections.put(clientID, ctx);
-        clientID++;
+        connections.put(id, ctx);
+        id++;
         ctx.flush();
     }
 

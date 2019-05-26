@@ -1,22 +1,26 @@
-package zfaria.fixme.market;
+package zfaria.fixme.broker;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 import java.net.InetSocketAddress;
 
-public class MarketBootstrap {
+public class BrokerBootstrap {
 
     private String host = "localhost";
-    private int port = 5001;
+    private int port = 5000;
 
-    public MarketBootstrap() {
+    private String destination;
+
+    public BrokerBootstrap(String destination) {
+        this.destination = destination;
     }
 
     public void run() {
@@ -29,7 +33,7 @@ public class MarketBootstrap {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast(new FixSenderHandler());
+                    socketChannel.pipeline().addLast(new FixSenderHandler(destination));
                 }
             });
             b.option(ChannelOption.SO_KEEPALIVE, true);
