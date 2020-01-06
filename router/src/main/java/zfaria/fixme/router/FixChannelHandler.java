@@ -1,6 +1,5 @@
 package zfaria.fixme.router;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -16,20 +15,16 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     private static int marketID = 100000;
     private static int brokerID = 200000;
 
-    private static Map<Integer, ChannelHandlerContext> connections;
+    private static Map<Integer, ChannelHandlerContext> connections = new HashMap<>();
 
-    private boolean broker;
+    private boolean isBroker;
 
-    static {
-        connections = new HashMap<>();
+    public FixChannelHandler(int port) {
+        isBroker = port == 5000;
     }
 
-    public FixChannelHandler(int brokerPort) {
-        broker = brokerPort == 5000;
-    }
-
-    private ChannelHandlerContext getContext(Fix f) {
-        String deststr = f.getTag(FixTag.ROUTING_RECEIVER_ID).getValue();
+    private ChannelHandlerContext getDestinationContext(Fix f) {
+        String deststr = f.getTag(FixTag.DESTINATION_ID).getValue();
         int val = Integer.parseInt(deststr);
         return connections.get(val);
     }
@@ -38,20 +33,21 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Fix f = FixSerializer.deserialize(msg);
         System.out.println(f.toString());
-        ChannelHandlerContext out = getContext(f);
+        ChannelHandlerContext out = getDestinationContext(f);
         out.write(Unpooled.copiedBuffer(f.serialize()));
         out.flush();
     }
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        int id = broker ? brokerID++ : marketID++;
+        int id = isBroker ? brokerID++ : marketID++;
         Fix fix = new Fix(FixTag.MSG_CONNECT);
-        fix.addTag(new FixTag(FixTag.CONNECT_ID, id + ""));
+        fix.addTag(new FixTag(FixTag.CONNECT_ID, id));
         ctx.write(Unpooled.copiedBuffer(fix.serialize()));
         connections.put(id, ctx);
-        id++;
         ctx.flush();
+
+        System.out.printf("New %s with id: %d", isBroker ? "Broker" : "Market", id);
     }
 
     @Override

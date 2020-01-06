@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.rmi.NoSuchObjectException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Fix {
@@ -16,9 +17,9 @@ public class Fix {
     private byte[] buffer;
 
     public Fix(String msgType) {
-        version = new FixTag("8", "FIX.4.2");
-        msg = new FixTag("35", msgType);
         tags = new ArrayList<>();
+        version = new FixTag(FixTag.VERSION, "FIX.4.2");
+        msg = new FixTag(FixTag.MSG_TYPE, msgType);
         size = calcSize();
     }
 
@@ -45,7 +46,7 @@ public class Fix {
                 else if (msg == null)
                     msg = tag;
                 else if (!tag.getType().equals(FixTag.SUM_TYPE))
-                    tags.add(new FixTag(s));
+                    tags.add(tag);
             } catch (NoSuchObjectException e) {
             }
         }
@@ -64,6 +65,11 @@ public class Fix {
         return null;
     }
 
+    /**
+     * Returns length of message string, used for the checksum.
+     * Does not include version, message, or checksum itself in the length.
+     * @return
+     */
     public FixTag calcSize() {
         int len = 0;
         len += msg.getSize() + 1;
@@ -73,8 +79,12 @@ public class Fix {
         return new FixTag("9", "" + len);
     }
 
+    /**
+     * Returns the total length of the message, used for transit integrity.
+     * @return
+     */
     public int getTotalLength() {
-        sum = new FixTag(FixTag.SUM_TYPE, String.format("%03d", calcSum()));
+        sum = new FixTag(FixTag.SUM_TYPE, String.format("%03d", calcCheckSum()));
         int size = 0;
         size += version.getSize() + 1;
         size += msg.getSize() + 1;
@@ -86,7 +96,12 @@ public class Fix {
         return size;
     }
 
-    public int calcSum() {
+    /**
+     * Calculates the checksum value postfixed to the message. Equal to the ASCII sum of all
+     * characters in the string, mod 256.
+     * @return
+     */
+    public int calcCheckSum() {
         int i = 0;
         i += version.getSum();
         i += msg.getSum();
@@ -137,5 +152,9 @@ public class Fix {
                 sb.append((char)b);
         }
         return sb.toString();
+    }
+
+    public String getMessageType() {
+        return msg.getValue();
     }
 }
