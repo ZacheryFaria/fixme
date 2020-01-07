@@ -3,24 +3,66 @@ package zfaria.fixme.core.notation;
 import io.netty.buffer.ByteBuf;
 
 import java.rmi.NoSuchObjectException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Fix {
 
-    private FixTag version;
-    private FixTag size;
-    private FixTag msg;
-    private FixTag sum;
-    private List<FixTag> tags;
+    public static final String VERSION = "8";
+
+    public static final String MSG_TYPE = "35";
+    public static final String MSG_CONNECT = "A";
+    public static final String MSG_NEW_ORDER = "D";
+    public static final String MSG_QUOTE_REQUEST = "R";
+    public static final String MSG_QUOTE = "S";
+
+    /*
+     * Returns list of available securities from a market
+     * Non-standard
+     */
+    public static final String MSG_AVAIL_SEC = "Z";
+
+    // Returns a list of available markets for brokers to contact, DESTINATION_ID should be 0
+    public static final String MSG_AVAIL_MARK = "Y";
+
+    public static final String SENDER_ID = "49";
+    public static final String DESTINATION_ID = "56";
+
+    // Side refers how the funds/securities are moving, buy/sell are implemented.
+    public static final String SIDE = "54";
+    public static final String SIDE_BUY = "1";
+    public static final String SIDE_SELL = "2";
+
+    public static final String ORDSTATUS = "39";
+    public static final String ORDSTATUS_ACKNOWLEDGE = "0";
+    public static final String ORDSTATUS_REJECTED = "8";
+    public static final String ORDSTATUS_PARTIAL = "1";
+    public static final String ORDSTATUS_COMPLETE = "2";
+
+
+    public static final String ORDERQTY = "38";
+
+    public static final String PRICE = "44";
+
+    public static final String SYMBOL = "55";
+
+    public static final String SUM_TYPE = "10";
+
+    public static final String SIZE = "9";
+
+    // Self implemented. Refers to the given id of the broker / router.
+    // Not part of official FIX protocol
+    public static final String CONNECT_ID = "500";
+
+    private Map<String, String> tag = new LinkedHashMap<>();
     private byte[] buffer;
 
     public Fix(String msgType) {
-        tags = new ArrayList<>();
-        version = new FixTag(FixTag.VERSION, "FIX.4.2");
-        msg = new FixTag(FixTag.MSG_TYPE, msgType);
-        size = calcSize();
+        tag.put(VERSION, "FIX.4.2");
+
+        tag.put(SIZE, calcSize());
+
+        tag.put(MSG_TYPE, msgType);
+
     }
 
     public Fix(byte[] buffer) {
@@ -35,34 +77,19 @@ public class Fix {
                 builder.append((char)b);
             }
         }
-        tags = new ArrayList<>(list.size());
         for (String s : list) {
-            try {
-                FixTag tag = new FixTag(s);
-                if (version == null)
-                    version = tag;
-                else if (size == null)
-                    size = tag;
-                else if (msg == null)
-                    msg = tag;
-                else if (!tag.getType().equals(FixTag.SUM_TYPE))
-                    tags.add(tag);
-            } catch (NoSuchObjectException e) {
-            }
+            String kv[] = s.split("=");
+            tag.put(kv[0], kv[1]);
         }
+        tag.remove(SUM_TYPE);
     }
 
-    public void addTag(FixTag tag) {
-        this.tags.add(tag);
+    public void addTag(String key, String value) {
+        tag.put(key, value);
     }
 
-    public FixTag getTag(String type) {
-        for (FixTag tag : tags) {
-            if (tag.getType().equals(type)) {
-                return tag;
-            }
-        }
-        return null;
+    public String getTag(String type) {
+        return tag.get(type);
     }
 
     /**
@@ -70,13 +97,15 @@ public class Fix {
      * Does not include version, message, or checksum itself in the length.
      * @return
      */
-    public FixTag calcSize() {
+    public String calcSize() {
         int len = 0;
-        len += msg.getSize() + 1;
-        for (FixTag tag : tags) {
-            len += tag.getSize() + 1;
+        for (Map.Entry<String, String> e : tag.entrySet()) {
+            if (e.getKey().equals(VERSION) || e.getKey().equals(SIZE)) {
+                continue;
+            }
+            len += getSize(e.getKey(), e.getValue());
         }
-        return new FixTag("9", "" + len);
+        return Integer.toString(len);
     }
 
     /**
@@ -84,15 +113,12 @@ public class Fix {
      * @return
      */
     public int getTotalLength() {
-        sum = new FixTag(FixTag.SUM_TYPE, String.format("%03d", calcCheckSum()));
         int size = 0;
-        size += version.getSize() + 1;
-        size += msg.getSize() + 1;
-        size += this.size.getSize() + 1;
-        for (FixTag tag : tags) {
-            size += tag.getSize() + 1;
+
+        for (Map.Entry<String, String> e : tag.entrySet()) {
+            size += getSize(e.getKey(), e.getValue());
         }
-        size += sum.getSize() + 1;
+        size += 6 + 1;
         return size;
     }
 
@@ -102,40 +128,37 @@ public class Fix {
      * @return
      */
     public int calcCheckSum() {
-        int i = 0;
-        i += version.getSum();
-        i += msg.getSum();
-        i += size.getSum();
-        for (FixTag tag : tags) {
-            i += tag.getSum();
+        int sum = 0;
+        for (Map.Entry<String, String> e : tag.entrySet()) {
+            if (e.getKey().equals(SUM_TYPE)) {
+                continue;
+            }
+            for (byte b : e.getKey().getBytes()) {
+                sum += b;
+            }
+            for (byte b : e.getValue().getBytes()) {
+                sum += b;
+            }
+            sum += 1;
+            sum += '=';
         }
-        return i % 256;
+
+        return sum % 256;
     }
 
-
     public byte[] serialize() {
-        size = calcSize();
+        tag.put(SIZE, calcSize());
         byte[] buf = new byte[getTotalLength()];
         int len = 0;
-        for (byte b : version.encode()) {
-            buf[len++] = b;
-        }
-        buf[len++] = (byte)1;
-        for (byte b : size.encode()) {
-            buf[len++] = b;
-        }
-        buf[len++] = (byte)1;
-        for (byte b : msg.encode()) {
-            buf[len++] = b;
-        }
-        buf[len++] = (byte)1;
-        for (FixTag tag : tags) {
-            for (byte b : tag.encode()) {
+        for (Map.Entry<String, String> e : tag.entrySet()) {
+            String s = String.format("%s=%s", e.getKey(), e.getValue());
+            for (byte b : s.getBytes()) {
                 buf[len++] = b;
             }
             buf[len++] = (byte)1;
         }
-        for (byte b : sum.encode()) {
+        String sum = String.format("%s=%03d", SUM_TYPE, calcCheckSum());
+        for (byte b : sum.getBytes()) {
             buf[len++] = b;
         }
         buf[len++] = (byte)1;
@@ -154,7 +177,7 @@ public class Fix {
         return sb.toString();
     }
 
-    public String getMessageType() {
-        return msg.getValue();
+    public int getSize(String k, String v) {
+        return k.length() + v.length() + 2;
     }
 }

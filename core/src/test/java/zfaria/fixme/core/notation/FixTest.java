@@ -24,12 +24,12 @@ public class FixTest {
         s = s.replace('|', (char)1);
         Fix f = new Fix(s.getBytes());
 
-        assertEquals("65", f.calcSize().getValue());
+        assertEquals("65", f.calcSize());
 
-        Fix f2 = new Fix(FixTag.MSG_CONNECT);
-        f2.addTag(new FixTag(FixTag.CONNECT_ID, 100000 + ""));
+        Fix f2 = new Fix(Fix.MSG_CONNECT);
+        f2.addTag(Fix.CONNECT_ID, 100000 + "");
 
-        assertEquals("16", f2.calcSize().getValue());
+        assertEquals("16", f2.calcSize());
     }
 
     @Test
@@ -47,17 +47,9 @@ public class FixTest {
         byte[] buff3 = fff.serialize();
         assertArrayEquals(buff, buff3);
 
+        System.out.println(asString(buff3));
+        System.out.println(os);
         assertEquals(os, asString(buff));
-    }
-
-    @Test
-    public void getTagTest() {
-        Fix f = new Fix(FixTag.MSG_NEW_ORDER);
-        FixTag ft = new FixTag(FixTag.SIDE, FixTag.SIDE_BUY);
-        f.addTag(ft);
-
-
-        assertEquals(ft, f.getTag(FixTag.SIDE));
     }
 
     @Test

@@ -1,11 +1,8 @@
 package zfaria.fixme.market;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import zfaria.fixme.core.notation.Fix;
 import zfaria.fixme.core.notation.FixSerializer;
-import zfaria.fixme.core.notation.FixTag;
 
 public class FixSenderHandler extends SimpleChannelInboundHandler {
 
@@ -36,7 +33,7 @@ public class FixSenderHandler extends SimpleChannelInboundHandler {
     protected void channelRead0(ChannelHandlerContext ctx, Object o) throws Exception {
         Fix f = FixSerializer.deserialize(o);
 
-        if (f.getMessageType().equals(FixTag.MSG_CONNECT)) {
+        if (f.getTag(Fix.MSG_TYPE).equals(Fix.MSG_CONNECT)) {
             handleNewConnection(ctx, f);
         }
         System.out.println(f.toString());
@@ -47,7 +44,7 @@ public class FixSenderHandler extends SimpleChannelInboundHandler {
     }
 
     private void handleNewConnection(ChannelHandlerContext ctx, Fix f) {
-        String idString = f.getTag(FixTag.CONNECT_ID).getValue();
+        String idString = f.getTag(Fix.CONNECT_ID);
         id = Integer.parseInt(idString);
         System.out.printf("My id is: %d\n", id);
     }

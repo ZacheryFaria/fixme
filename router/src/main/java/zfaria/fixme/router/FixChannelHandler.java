@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import zfaria.fixme.core.notation.Fix;
 import zfaria.fixme.core.notation.FixSerializer;
-import zfaria.fixme.core.notation.FixTag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +23,7 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     private ChannelHandlerContext getDestinationContext(Fix f) {
-        String deststr = f.getTag(FixTag.DESTINATION_ID).getValue();
+        String deststr = f.getTag(Fix.DESTINATION_ID);
         int val = Integer.parseInt(deststr);
         return connections.get(val);
     }
@@ -41,8 +40,8 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         int id = isBroker ? brokerID++ : marketID++;
-        Fix fix = new Fix(FixTag.MSG_CONNECT);
-        fix.addTag(new FixTag(FixTag.CONNECT_ID, id));
+        Fix fix = new Fix(Fix.MSG_CONNECT);
+        fix.addTag(Fix.CONNECT_ID, Integer.toString(id));
         ctx.write(Unpooled.copiedBuffer(fix.serialize()));
         connections.put(id, ctx);
         ctx.flush();
