@@ -11,15 +11,15 @@ public class Listing {
 
     private String name;
     private int qty;
-    private BigDecimal price;
+    private double price;
     private int ownerId;
     private int id;
 
-    public Listing(String name, int qty, BigDecimal price, int owner) {
+    public Listing(String name, int qty, double price, int owner) {
         this(name, qty, price, owner, -1);
     }
 
-    public Listing(String name, int qty, BigDecimal price, int owner, int id) {
+    public Listing(String name, int qty, double price, int owner, int id) {
         this.name = name;
         this.qty = qty;
         this.price = price;
@@ -31,14 +31,14 @@ public class Listing {
         this.id = set.getInt("id");
         this.ownerId = set.getInt("owner");
         this.qty = set.getInt("quantity");
-        this.price = set.getBigDecimal("price");
+        this.price = set.getDouble("price");
         this.name = set.getString("symbol");
     }
 
     public Listing(Fix f) {
         this.name = f.getTag(Fix.SYMBOL);
         this.qty = Integer.parseInt(f.getTag(Fix.ORDERQTY));
-        this.price = new BigDecimal(f.getTag(Fix.PRICE));
+        this.price = Double.parseDouble(f.getTag(Fix.PRICE));
         this.ownerId = Integer.parseInt(f.getTag(Fix.SENDER_ID));
     }
 
@@ -50,12 +50,12 @@ public class Listing {
         return qty;
     }
 
-    public BigDecimal getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public BigDecimal getValue() {
-        return price.multiply(new BigDecimal(qty));
+    public double getValue() {
+        return price * qty;
     }
 
     public int getOwnerId() {
@@ -80,5 +80,29 @@ public class Listing {
 
     public boolean isEmpty() {
         return qty <= 0;
+    }
+
+    /**
+     * Handles an order for @qty shares.
+     * It will either fill the order, or partially fill it, depending on how many shares
+     * being bought.
+     *
+     * @param qty
+     * @return A Listing used for the response and to be placed in the transaction database,
+     * not an actual listing.
+     */
+    public Listing handleOrder(int qty) {
+        int filledQty = 0;
+
+        if (qty <= this.qty) {
+            this.qty -= qty;
+            filledQty = qty;
+        } else {
+            filledQty = this.qty;
+            this.qty = 0;
+        }
+
+        Listing l = new Listing(name, filledQty, price, ownerId);
+        return l;
     }
 }

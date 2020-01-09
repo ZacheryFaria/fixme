@@ -31,6 +31,7 @@ public class BrokerWindow implements FixWindow {
         window = new JFrame("Broker");
         window.setVisible(true);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.setSize(640, 480);
         window.setLayout(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
@@ -39,12 +40,10 @@ public class BrokerWindow implements FixWindow {
         c.gridwidth = 3;
         c.weightx = .1;
         c.weighty = .1;
-        c.ipady = 400;
-        c.ipadx = 600;
+        c.ipady = 300;
+        c.ipadx = 300;
         log = new JTextArea();
         log.setEditable(false);
-        log.setSize(500, 500);
-        log.setLocation(0, 0);
         log.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         logPane = new JScrollPane(log);
         logPane.setAutoscrolls(true);
@@ -52,7 +51,7 @@ public class BrokerWindow implements FixWindow {
 
         c.gridx = 3;
         c.gridwidth = 1;
-        c.ipadx = 200;
+        c.ipadx = 100;
         holdingsTable = new JTable(holdings);
         holdingsTable.setFillsViewportHeight(true);
         window.add(new JScrollPane(holdingsTable), c);
@@ -61,7 +60,6 @@ public class BrokerWindow implements FixWindow {
         c.gridx = 0;
         c.gridy = 1;
         c.ipady = 10;
-        c.ipadx = 200;
         symbol = new VanishingTextField("Sym");
         window.add(symbol, c);
 
@@ -93,7 +91,7 @@ public class BrokerWindow implements FixWindow {
         updateFunds();
         window.add(funds, c);
 
-        holdings.addHolding(new Listing("TSLA", 100, new BigDecimal("123"), 0));
+        //holdings.addHolding(new Listing("TSLA", 100, new BigDecimal("123"), 0));
 
         window.pack();
     }
@@ -117,7 +115,7 @@ public class BrokerWindow implements FixWindow {
         f.addTag(Fix.SYMBOL, symbol.getText());
         f.addTag(Fix.PRICE, price.getText());
         f.addTag(Fix.ORDERQTY, quantity.getText());
-        f.addTag(Fix.FUNDS, funds.toString());
+        f.addTag(Fix.FUNDS, holdings.funds);
 
         boolean sendMessage = true;
         if (orderType.equals(Fix.SIDE_SELL)) {
@@ -133,19 +131,19 @@ public class BrokerWindow implements FixWindow {
     }
 
     public void updateFunds() {
-        funds.setText(String.format("Funds $%s", holdings.funds.toString()));
+        funds.setText(String.format("Funds $%f", holdings.funds));
     }
 
     /**
      * Is called when the transaction was successful. Used to update the ui.
-     * @param f
+     * @param message
      */
-    public void newOrderEvent(Fix f) {
-        String status = f.getTag(Fix.ORDSTATUS);
+    public void fireOrderEvent(Fix message) {
+        String status = message.getTag(Fix.ORDSTATUS);
 
-        String side = f.getTag(Fix.SIDE).equals(Fix.SIDE_SELL) ? "Sell" : "Buy";
+        String side = message.getTag(Fix.SIDE).equals(Fix.SIDE_SELL) ? "Sell" : "Buy";
 
-        System.out.println(f);
+        addMessage(message.toString());
 
         switch (status) {
             case Fix.ORDSTATUS_REJECTED:
@@ -154,24 +152,15 @@ public class BrokerWindow implements FixWindow {
             case Fix.ORDSTATUS_ACKNOWLEDGE:
                 addMessage("Sale order received");
                 break;
-            case Fix.ORDSTATUS_COMPLETE:
+            case Fix.ORDSTATUS_PARTIAL:
                 addMessage(String.format(side + " completed. %s of %s for %s each.",
-                        f.getTag(Fix.ORDERQTY),
-                        f.getTag(Fix.SYMBOL),
-                        f.getTag(Fix.PRICE)));
-                holdings.transactionComplete(f);
+                        message.getTag(Fix.ORDERQTY),
+                        message.getTag(Fix.SYMBOL),
+                        message.getTag(Fix.PRICE)));
+                holdings.transactionComplete(message);
+                updateFunds();
+                //holdingsTable.updateUI();
                 break;
         }
-
-
-        if (f.getTag(Fix.ORDSTATUS).equals(Fix.ORDSTATUS_REJECTED)) {
-            addMessage("Order rejected, not sold or not enough funds.");
-            return;
-        }
-
-        addMessage("Sucksess");
-
-        addMessage(f.toString());
     }
-
 }

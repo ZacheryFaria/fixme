@@ -32,6 +32,9 @@ public class TradeList extends AbstractTableModel {
     @Override
     public Object getValueAt(int i, int i1) {
         List<Listing> list = Database.getListings();
+        if (i >= list.size()) {
+            return null;
+        }
         Listing l = list.get(i);
         switch (i1) {
             case 0:

@@ -16,9 +16,6 @@ public class MarketBootstrap {
     private String host = "localhost";
     private int port = 5001;
 
-    public MarketBootstrap() {
-    }
-
     public void run() {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -32,6 +29,7 @@ public class MarketBootstrap {
                     socketChannel.pipeline().addLast(new MarketSenderHandler());
                 }
             });
+            b.option(ChannelOption.TCP_NODELAY, true);
             b.option(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture f = b.connect().sync();

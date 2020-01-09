@@ -26,10 +26,11 @@ public class BrokerBootstrap {
             b.remoteAddress(new InetSocketAddress(host, port));
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
-                protected void initChannel(SocketChannel socketChannel) throws Exception {
+                protected void initChannel(SocketChannel socketChannel) {
                     socketChannel.pipeline().addLast(new BrokerSenderHandler());
                 }
             });
+            b.option(ChannelOption.TCP_NODELAY, true);
             b.option(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture f = b.connect().sync();

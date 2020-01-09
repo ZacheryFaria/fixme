@@ -25,7 +25,6 @@ public class Fix {
     public static final String ORDSTATUS_PARTIAL = "1";
     public static final String ORDSTATUS_COMPLETE = "2";
 
-
     public static final String ORDERQTY = "38";
 
     public static final String PRICE = "44";
@@ -77,6 +76,10 @@ public class Fix {
 
     public void addTag(String key, String value) {
         tag.put(key, value);
+    }
+
+    public void addTag(String key, Object o) {
+        tag.put(key, o.toString());
     }
 
     public String getTag(String type) {

@@ -31,7 +31,7 @@ public abstract class FixSenderHandler extends SimpleChannelInboundHandler {
         }));
 
         dispatch.put(Fix.MSG_NEW_ORDER, (ctx, f) -> {
-            window.newOrderEvent(f);
+            window.fireOrderEvent(f);
         });
 
         dispatch.put(Fix.MSG_NO_DESTINATION, ((ctx1, f) -> {
@@ -55,7 +55,12 @@ public abstract class FixSenderHandler extends SimpleChannelInboundHandler {
     public void sendMessage(Fix f) {
         byte[] buff = f.serialize();
 
-        ctx.writeAndFlush(Unpooled.wrappedBuffer(buff));
+        try {
+            ctx.writeAndFlush(Unpooled.wrappedBuffer(buff)).sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     public int getId() {

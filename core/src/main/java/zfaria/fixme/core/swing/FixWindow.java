@@ -12,8 +12,8 @@ public interface FixWindow {
     /**
      * Called when the dispatcher receives a Fix.MSG_NEW_ORDER
      * Has differing implementations on broker/market.
-     * @param f
+     * @param message
      */
-    void newOrderEvent(Fix f);
+    void fireOrderEvent(Fix message);
 
 }

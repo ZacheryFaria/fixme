@@ -43,7 +43,7 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
             f = getNoSuchDestinationResponse(f);
         }
 
-        out.writeAndFlush(Unpooled.copiedBuffer(f.serialize()));
+        out.writeAndFlush(Unpooled.copiedBuffer(f.serialize())).syncUninterruptibly();
     }
 
     private void fireBrokerMessage(ChannelHandlerContext ctx, Fix f) {
@@ -70,10 +70,8 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
         int id = isBroker ? brokerID++ : marketID++;
         Fix fix = new Fix(Fix.MSG_CONNECT);
         fix.addTag(Fix.CONNECT_ID, Integer.toString(id));
-        ctx.write(Unpooled.copiedBuffer(fix.serialize()));
+        ctx.writeAndFlush(Unpooled.copiedBuffer(fix.serialize())).syncUninterruptibly();
         connections.put(id, ctx);
-        ctx.flush();
-
         System.out.printf("New %s with id: %d\n", isBroker ? "Broker" : "Market", id);
     }
 

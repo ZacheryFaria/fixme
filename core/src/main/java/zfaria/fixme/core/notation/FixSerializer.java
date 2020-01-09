@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 public class FixSerializer {
 
     public static Fix deserialize(ByteBuf buf) {
+        //System.out.println(buf.readableBytes());
         byte[] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
         return new Fix(bytes);

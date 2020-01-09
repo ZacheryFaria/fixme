@@ -15,7 +15,7 @@ public class Holdings extends AbstractTableModel {
 
     private List<Listing> data = new ArrayList<>();
 
-    protected BigDecimal funds = new BigDecimal("10000");
+    protected double funds = 10000;
 
     public void addHolding(Listing l) {
         for (Listing i : data) {
@@ -87,11 +87,11 @@ public class Holdings extends AbstractTableModel {
         Listing l = new Listing(f);
 
         if (f.getTag(Fix.SIDE).equals(Fix.SIDE_BUY)) {
-            funds.subtract(l.getValue());
+            funds -= l.getValue();
             addHolding(l);
+            fireTableDataChanged();
         } else {
-            funds.add(l.getValue());
-            //removeHolding(l);
+            funds += l.getValue();
         }
     }
 

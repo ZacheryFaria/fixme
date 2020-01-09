@@ -50,7 +50,7 @@ public class Database {
         try (PreparedStatement state = conn.prepareStatement(sql)) {
             state.setInt(1, l.getOwnerId());
             state.setString(2, l.getName());
-            state.setBigDecimal(3, l.getPrice());
+            state.setDouble(3, l.getPrice());
             state.setInt(4, l.getQty());
             state.executeUpdate();
             ResultSet set = state.getGeneratedKeys();
@@ -124,7 +124,39 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
+    }
+
+    public static void modifyListing(Listing l) {
+        String sql = "update listings set quantity = ? where id = ?";
+
+        // If the quantity is zero we are goign to just remove it.
+        if (l.getQty() <= 0) {
+            removeListing(l);
+            return;
+        }
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, l.getQty());
+            stmt.setInt(2, l.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void removeListing(Listing l) {
+        String sql = "delete from listings where id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, l.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addTransaction(Listing l, int buyer) {
+
     }
 
 
