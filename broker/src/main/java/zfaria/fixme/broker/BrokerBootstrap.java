@@ -17,12 +17,6 @@ public class BrokerBootstrap {
     private String host = "localhost";
     private int port = 5000;
 
-    private String destination;
-
-    public BrokerBootstrap(String destination) {
-        this.destination = destination;
-    }
-
     public void run() {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -33,7 +27,7 @@ public class BrokerBootstrap {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast(new FixSenderHandler(destination));
+                    socketChannel.pipeline().addLast(new BrokerSenderHandler());
                 }
             });
             b.option(ChannelOption.SO_KEEPALIVE, true);

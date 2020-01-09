@@ -24,17 +24,46 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
 
     private ChannelHandlerContext getDestinationContext(Fix f) {
         String deststr = f.getTag(Fix.DESTINATION_ID);
-        int val = Integer.parseInt(deststr);
-        return connections.get(val);
+        int val = 0;
+
+        try {
+            val = Integer.parseInt(deststr);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+
+        return connections.getOrDefault(val, null);
+    }
+
+    private void fireMarketMessage(ChannelHandlerContext ctx, Fix f) {
+        ChannelHandlerContext out = getDestinationContext(f);
+
+        if (out == null) {
+            out = ctx;
+            f = getNoSuchDestinationResponse(f);
+        }
+
+        out.write(Unpooled.copiedBuffer(f.serialize()));
+        out.flush();
+    }
+
+    private void fireBrokerMessage(ChannelHandlerContext ctx, Fix f) {
+        for (Map.Entry<Integer, ChannelHandlerContext> e : connections.entrySet()) {
+            if (e.getKey() < 200000 && e.getValue().channel().isActive()) {
+                e.getValue().writeAndFlush(Unpooled.copiedBuffer(f.serialize()));
+            }
+        }
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Fix f = FixSerializer.deserialize(msg);
         System.out.println(f.toString());
-        ChannelHandlerContext out = getDestinationContext(f);
-        out.write(Unpooled.copiedBuffer(f.serialize()));
-        out.flush();
+        if (!isBroker) {
+            fireMarketMessage(ctx, f);
+        } else {
+            fireBrokerMessage(ctx, f);
+        }
     }
 
     @Override
@@ -46,13 +75,20 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
         connections.put(id, ctx);
         ctx.flush();
 
-        System.out.printf("New %s with id: %d", isBroker ? "Broker" : "Market", id);
+        System.out.printf("New %s with id: %d\n", isBroker ? "Broker" : "Market", id);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    public Fix getNoSuchDestinationResponse(Fix f) {
+        Fix fix = new Fix(Fix.MSG_BAD_DESTINATION);
+        fix.addTag(Fix.SENDER_ID, f.getTag(Fix.SENDER_ID));
+        fix.addTag(Fix.DESTINATION_ID, f.getTag(Fix.DESTINATION_ID));
+        return fix;
     }
 
 }

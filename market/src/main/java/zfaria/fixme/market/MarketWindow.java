@@ -1,11 +1,17 @@
 package zfaria.fixme.market;
 
+import zfaria.fixme.core.database.Database;
+import zfaria.fixme.core.instruments.Listing;
+import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.notation.FixSenderHandler;
+import zfaria.fixme.core.swing.FixWindow;
+import zfaria.fixme.core.swing.VanishingTextField;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+import java.sql.SQLException;
 
-public class MarketWindow {
+public class MarketWindow implements FixWindow {
 
     private JFrame window;
     private JTextArea log;
@@ -13,7 +19,13 @@ public class MarketWindow {
     private JTextField symbol;
     private JTextField quantity;
     private JTextField price;
-    private JButton submit;
+    private JButton add;
+
+    private JTable tradeTable;
+
+    private FixSenderHandler sender;
+
+    private TradeList list = new TradeList();
 
     public MarketWindow() {
         window = new JFrame("Market");
@@ -23,10 +35,11 @@ public class MarketWindow {
         window.setSize(1280, 720);
 
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
+        c.fill = GridBagConstraints.BOTH;
 
         c.gridwidth = 3;
         c.weightx = .1;
+        c.weighty = .1;
         c.ipady = 400;
         c.ipadx = 600;
         log = new JTextArea();
@@ -38,10 +51,18 @@ public class MarketWindow {
         logPane.setAutoscrolls(true);
         window.add(logPane, c);
 
+        c.gridx = 3;
+        c.gridwidth = 1;
+        c.ipadx = 200;
+        tradeTable = new JTable(list);
+        tradeTable.setFillsViewportHeight(true);
+        window.add(new JScrollPane(tradeTable), c);
+
+        c.weighty = 0;
+        c.gridx = 0;
         c.gridy = 1;
         c.ipady = 10;
         c.ipadx = 200;
-        c.gridwidth = 1;
         symbol = new VanishingTextField("Sym");
         window.add(symbol, c);
 
@@ -55,15 +76,26 @@ public class MarketWindow {
 
         c.gridx = 0;
         c.gridy = 2;
-        submit = new JButton("Submit");
-        window.add(submit, c);
-
+        add = new JButton("Add");
+        window.add(add, c);
 
         window.pack();
     }
 
-    public void addToQueue(String msg) {
+    public void addMessage(String msg) {
         log.append(msg + "\n");
+    }
+
+    public void addSender(FixSenderHandler handler) {
+        this.sender = handler;
+    }
+
+    public void newOrderEvent(Fix f) {
+        log.append(f + "\n");
+        tradeTable.updateUI();
+        if (f.getTag(Fix.SIDE).equals(Fix.SIDE_SELL)) {
+            Database.addNewListing(new Listing(f));
+        }
     }
 
 }

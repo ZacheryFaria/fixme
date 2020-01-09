@@ -29,7 +29,7 @@ public class MarketBootstrap {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) throws Exception {
-                    socketChannel.pipeline().addLast(new FixSenderHandler());
+                    socketChannel.pipeline().addLast(new MarketSenderHandler());
                 }
             });
             b.option(ChannelOption.SO_KEEPALIVE, true);

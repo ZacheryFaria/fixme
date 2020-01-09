@@ -12,17 +12,6 @@ public class Fix {
     public static final String MSG_TYPE = "35";
     public static final String MSG_CONNECT = "A";
     public static final String MSG_NEW_ORDER = "D";
-    public static final String MSG_QUOTE_REQUEST = "R";
-    public static final String MSG_QUOTE = "S";
-
-    /*
-     * Returns list of available securities from a market
-     * Non-standard
-     */
-    public static final String MSG_AVAIL_SEC = "Z";
-
-    // Returns a list of available markets for brokers to contact, DESTINATION_ID should be 0
-    public static final String MSG_AVAIL_MARK = "Y";
 
     public static final String SENDER_ID = "49";
     public static final String DESTINATION_ID = "56";
@@ -48,6 +37,10 @@ public class Fix {
     public static final String SUM_TYPE = "10";
 
     public static final String SIZE = "9";
+
+    // Non-standard
+    // Amount of funds broker has, used buying
+    public static final String FUNDS = "499";
 
     // Self implemented. Refers to the given id of the broker / router.
     // Not part of official FIX protocol

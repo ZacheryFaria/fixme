@@ -1,4 +1,4 @@
-package zfaria.fixme.market;
+package zfaria.fixme.core.swing;
 
 import javax.swing.*;
 import java.awt.event.FocusEvent;
