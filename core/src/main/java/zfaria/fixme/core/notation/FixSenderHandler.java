@@ -1,5 +1,6 @@
 package zfaria.fixme.core.notation;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -46,21 +47,29 @@ public abstract class FixSenderHandler extends SimpleChannelInboundHandler {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object o) throws Exception {
-        Fix f = FixSerializer.deserialize(o);
+    protected void channelRead0(ChannelHandlerContext ctx, Object o) {
+        ByteBuf buf = (ByteBuf)o;
 
-        dispatch.get(f.getTag(Fix.MSG_TYPE)).notify(ctx, f);
+        while (buf.isReadable()) {
+            byte len = buf.readByte();
+            byte[] buff = new byte[len];
+            buf.readBytes(buff);
+
+            Fix f = new Fix(buff);
+
+            dispatch.get(f.getTag(Fix.MSG_TYPE)).notify(ctx, f);
+        }
     }
 
     public void sendMessage(Fix f) {
         byte[] buff = f.serialize();
 
-        try {
-            ctx.writeAndFlush(Unpooled.wrappedBuffer(buff)).sync();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        ByteBuf buf = Unpooled.buffer(buff.length);
 
+        buf.writeByte(buff.length);
+        buf.writeBytes(buff);
+
+        ctx.writeAndFlush(buf).syncUninterruptibly();
     }
 
     public int getId() {

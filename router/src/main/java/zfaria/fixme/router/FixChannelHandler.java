@@ -1,5 +1,6 @@
 package zfaria.fixme.router;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -43,36 +44,52 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
             f = getNoSuchDestinationResponse(f);
         }
 
-        out.writeAndFlush(Unpooled.copiedBuffer(f.serialize())).syncUninterruptibly();
+        sendMessage(out, f);
     }
 
     private void fireBrokerMessage(ChannelHandlerContext ctx, Fix f) {
         for (Map.Entry<Integer, ChannelHandlerContext> e : connections.entrySet()) {
             if (e.getKey() < 200000 && e.getValue().channel().isActive()) {
-                e.getValue().writeAndFlush(Unpooled.copiedBuffer(f.serialize()));
+                sendMessage(e.getValue(), f);
             }
         }
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Fix f = FixSerializer.deserialize(msg);
-        System.out.println(f.toString());
-        if (!isBroker) {
-            fireMarketMessage(ctx, f);
-        } else {
-            fireBrokerMessage(ctx, f);
+        ByteBuf buf = (ByteBuf)msg;
+
+        while (buf.isReadable()) {
+            byte len = buf.readByte();
+            byte[] buff = new byte[len];
+            buf.readBytes(buff);
+
+            Fix f = new Fix(buff);
+
+            if (!isBroker) {
+                fireMarketMessage(ctx, f);
+            } else {
+                fireBrokerMessage(ctx, f);
+            }
         }
     }
 
     @Override
-    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+    public void channelRegistered(ChannelHandlerContext ctx) {
         int id = isBroker ? brokerID++ : marketID++;
         Fix fix = new Fix(Fix.MSG_CONNECT);
         fix.addTag(Fix.CONNECT_ID, Integer.toString(id));
-        ctx.writeAndFlush(Unpooled.copiedBuffer(fix.serialize())).syncUninterruptibly();
+        sendMessage(ctx, fix);
         connections.put(id, ctx);
         System.out.printf("New %s with id: %d\n", isBroker ? "Broker" : "Market", id);
+    }
+
+    private void sendMessage(ChannelHandlerContext ctx, Fix f) {
+        byte[] buff = f.serialize();
+        ByteBuf buf = Unpooled.buffer(buff.length + 1);
+        buf.writeByte(buff.length);
+        buf.writeBytes(buff);
+        ctx.writeAndFlush(buf.copy()).syncUninterruptibly();
     }
 
     @Override
