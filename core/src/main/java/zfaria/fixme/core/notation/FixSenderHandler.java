@@ -33,6 +33,10 @@ public abstract class FixSenderHandler extends SimpleChannelInboundHandler {
         dispatch.put(Fix.MSG_NEW_ORDER, (ctx, f) -> {
             window.newOrderEvent(f);
         });
+
+        dispatch.put(Fix.MSG_NO_DESTINATION, ((ctx1, f) -> {
+            window.addMessage("Unable to find destination id " + f.getTag(Fix.DESTINATION_ID));
+        }));
     }
 
     @Override

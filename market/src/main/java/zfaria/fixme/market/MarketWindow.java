@@ -9,7 +9,7 @@ import zfaria.fixme.core.swing.VanishingTextField;
 
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLException;
+import java.util.List;
 
 public class MarketWindow implements FixWindow {
 
@@ -95,7 +95,33 @@ public class MarketWindow implements FixWindow {
         tradeTable.updateUI();
         if (f.getTag(Fix.SIDE).equals(Fix.SIDE_SELL)) {
             Database.addNewListing(new Listing(f));
+        } else {
+            processTransaction(f);
         }
+    }
+
+    private void processTransaction(Fix f) {
+        Listing buy = new Listing(f);
+        String sym = f.getTag(Fix.SYMBOL);
+
+        List<Listing> list = Database.getListingsBySymbol(sym);
+
+        if (list.size() == 0) {
+            rejectedOrder(f);
+            return;
+        }
+
+        for (Listing l : list) {
+
+        }
+    }
+
+    private void rejectedOrder(Fix f) {
+        Fix ff = new Fix(Fix.MSG_NEW_ORDER);
+        ff.addTag(Fix.ORDSTATUS, Fix.ORDSTATUS_REJECTED);
+        ff.addTag(Fix.DESTINATION_ID, f.getTag(Fix.SENDER_ID));
+
+        sender.sendMessage(ff);
     }
 
 }

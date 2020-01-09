@@ -116,5 +116,16 @@ public class Database {
         return list;
     }
 
+    public static List<Listing> getListingsBySymbol(String symbol) {
+        String sql = "select * from listings where symbol = ? order by price";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, symbol);
+            return generateListFromResultSet(stmt.executeQuery());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

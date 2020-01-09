@@ -70,4 +70,15 @@ public class Listing {
         return id;
     }
 
+    public void addQty(int qty) {
+        this.qty += qty;
+    }
+
+    public void removeQty(int qty) {
+        this.qty -= qty;
+    }
+
+    public boolean isEmpty() {
+        return qty <= 0;
+    }
 }

@@ -1,8 +1,5 @@
 package zfaria.fixme.core.notation;
 
-import io.netty.buffer.ByteBuf;
-
-import java.rmi.NoSuchObjectException;
 import java.util.*;
 
 public class Fix {
@@ -12,6 +9,7 @@ public class Fix {
     public static final String MSG_TYPE = "35";
     public static final String MSG_CONNECT = "A";
     public static final String MSG_NEW_ORDER = "D";
+    public static final String MSG_NO_DESTINATION = "d";
 
     public static final String SENDER_ID = "49";
     public static final String DESTINATION_ID = "56";

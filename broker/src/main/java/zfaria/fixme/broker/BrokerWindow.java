@@ -1,5 +1,6 @@
 package zfaria.fixme.broker;
 
+import zfaria.fixme.core.instruments.Listing;
 import zfaria.fixme.core.notation.Fix;
 import zfaria.fixme.core.notation.FixSenderHandler;
 import zfaria.fixme.core.swing.FixWindow;
@@ -7,6 +8,7 @@ import zfaria.fixme.core.swing.VanishingTextField;
 
 import javax.swing.*;
 import java.awt.*;
+import java.math.BigDecimal;
 
 public class BrokerWindow implements FixWindow {
 
@@ -18,9 +20,8 @@ public class BrokerWindow implements FixWindow {
     private JTextField price;
     private JButton buy;
     private JButton sell;
-    private JButton quote;
+    private JLabel funds;
 
-    private JScrollPane holdingsPane;
     private JTable holdingsTable;
     private Holdings holdings = new Holdings();
 
@@ -88,11 +89,11 @@ public class BrokerWindow implements FixWindow {
         window.add(sell, c);
 
         c.gridx = 2;
-        quote = new JButton("Quote");
-        quote.addActionListener((actionEvent -> {
-            placeQuote();
-        }));
-        window.add(quote, c);
+        funds = new JLabel("Funds");
+        updateFunds();
+        window.add(funds, c);
+
+        holdings.addHolding(new Listing("TSLA", 100, new BigDecimal("123"), 0));
 
         window.pack();
     }
@@ -109,19 +110,30 @@ public class BrokerWindow implements FixWindow {
      * Creates a fix message and dispatches it
      * @param orderType is either Buy or Sell
      */
-    public void placeOrder(String orderType) {
+    private void placeOrder(String orderType) {
         Fix f = new Fix(Fix.MSG_NEW_ORDER);
         f.addTag(Fix.SIDE, orderType);
         f.addTag(Fix.SENDER_ID, Integer.toString(sender.getId()));
         f.addTag(Fix.SYMBOL, symbol.getText());
         f.addTag(Fix.PRICE, price.getText());
         f.addTag(Fix.ORDERQTY, quantity.getText());
+        f.addTag(Fix.FUNDS, funds.toString());
 
-        sender.sendMessage(f);
+        boolean sendMessage = true;
+        if (orderType.equals(Fix.SIDE_SELL)) {
+            sendMessage = holdings.removeHolding(new Listing(f));
+            holdingsTable.updateUI();
+        }
+
+        if (sendMessage) {
+            sender.sendMessage(f);
+        } else {
+            addMessage("Not enough inventory.");
+        }
     }
 
-    public void placeQuote() {
-
+    public void updateFunds() {
+        funds.setText(String.format("Funds $%s", holdings.funds.toString()));
     }
 
     /**
@@ -129,16 +141,34 @@ public class BrokerWindow implements FixWindow {
      * @param f
      */
     public void newOrderEvent(Fix f) {
-        if (!f.getTag(Fix.ORDSTATUS).equals(Fix.ORDSTATUS_REJECTED)) {
-            String message = String.format("Order with %s, (%s of %s for %s) was rejected.",
-                    f.getTag(Fix.SENDER_ID),
-                    f.getTag(Fix.ORDERQTY),
-                    f.getTag(Fix.SYMBOL),
-                    f.getTag(Fix.PRICE));
-            addMessage(message);
+        String status = f.getTag(Fix.ORDSTATUS);
 
+        String side = f.getTag(Fix.SIDE).equals(Fix.SIDE_SELL) ? "Sell" : "Buy";
+
+        System.out.println(f);
+
+        switch (status) {
+            case Fix.ORDSTATUS_REJECTED:
+                addMessage("Order rejected, instrument not sold or not enough funds.");
+                break;
+            case Fix.ORDSTATUS_ACKNOWLEDGE:
+                addMessage("Sale order received");
+                break;
+            case Fix.ORDSTATUS_COMPLETE:
+                addMessage(String.format(side + " completed. %s of %s for %s each.",
+                        f.getTag(Fix.ORDERQTY),
+                        f.getTag(Fix.SYMBOL),
+                        f.getTag(Fix.PRICE)));
+                holdings.transactionComplete(f);
+                break;
+        }
+
+
+        if (f.getTag(Fix.ORDSTATUS).equals(Fix.ORDSTATUS_REJECTED)) {
+            addMessage("Order rejected, not sold or not enough funds.");
             return;
         }
+
         addMessage("Sucksess");
 
         addMessage(f.toString());

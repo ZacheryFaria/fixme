@@ -43,8 +43,7 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
             f = getNoSuchDestinationResponse(f);
         }
 
-        out.write(Unpooled.copiedBuffer(f.serialize()));
-        out.flush();
+        out.writeAndFlush(Unpooled.copiedBuffer(f.serialize()));
     }
 
     private void fireBrokerMessage(ChannelHandlerContext ctx, Fix f) {
@@ -85,7 +84,7 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     public Fix getNoSuchDestinationResponse(Fix f) {
-        Fix fix = new Fix(Fix.MSG_BAD_DESTINATION);
+        Fix fix = new Fix(Fix.MSG_NO_DESTINATION);
         fix.addTag(Fix.SENDER_ID, f.getTag(Fix.SENDER_ID));
         fix.addTag(Fix.DESTINATION_ID, f.getTag(Fix.DESTINATION_ID));
         return fix;
