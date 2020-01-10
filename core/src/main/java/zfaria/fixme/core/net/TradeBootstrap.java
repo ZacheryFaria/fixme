@@ -1,21 +1,28 @@
-package zfaria.fixme.broker;
+package zfaria.fixme.core.net;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import zfaria.fixme.core.swing.FixWindow;
 
 import java.net.InetSocketAddress;
 
-public class BrokerBootstrap {
+public class TradeBootstrap {
 
     private String host = "localhost";
-    private int port = 5000;
+    private int port;
+
+    public static FixSenderHandler handler;
+
+    public TradeBootstrap(int port, FixWindow window) {
+        handler = new FixSenderHandler(window);
+        this.port = port;
+    }
 
     public void run() {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -27,7 +34,7 @@ public class BrokerBootstrap {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
-                    socketChannel.pipeline().addLast(new BrokerSenderHandler());
+                    socketChannel.pipeline().addLast(handler);
                 }
             });
             b.option(ChannelOption.TCP_NODELAY, true);

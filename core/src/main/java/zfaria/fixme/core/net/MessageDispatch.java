@@ -1,6 +1,7 @@
-package zfaria.fixme.core.notation;
+package zfaria.fixme.core.net;
 
 import io.netty.channel.ChannelHandlerContext;
+import zfaria.fixme.core.notation.Fix;
 
 public interface MessageDispatch {
 

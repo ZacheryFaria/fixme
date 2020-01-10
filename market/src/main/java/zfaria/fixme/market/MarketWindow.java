@@ -1,9 +1,10 @@
 package zfaria.fixme.market;
 
+import static zfaria.fixme.core.net.TradeBootstrap.handler;
 import zfaria.fixme.core.database.Database;
 import zfaria.fixme.core.instruments.Listing;
+import zfaria.fixme.core.net.TradeBootstrap;
 import zfaria.fixme.core.notation.Fix;
-import zfaria.fixme.core.notation.FixSenderHandler;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
 
@@ -11,9 +12,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-public class MarketWindow implements FixWindow {
+public class MarketWindow extends FixWindow {
 
-    private JFrame window;
     private JTextArea log;
     private JScrollPane logPane;
     private JTextField symbol;
@@ -23,16 +23,12 @@ public class MarketWindow implements FixWindow {
 
     private JTable tradeTable;
 
-    private FixSenderHandler sender;
-
     private TradeList list = new TradeList();
 
     public MarketWindow() {
-        window = new JFrame("Market");
-        window.setVisible(true);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setLayout(new GridBagLayout());
-        window.setSize(640, 480);
+        super("Market");
+
+        handler = TradeBootstrap.handler;
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
@@ -88,10 +84,6 @@ public class MarketWindow implements FixWindow {
 
     public void addMessage(String msg) {
         log.append(msg + "\n");
-    }
-
-    public void addSender(FixSenderHandler handler) {
-        this.sender = handler;
     }
 
     public void fireOrderEvent(Fix message) {
@@ -178,7 +170,7 @@ public class MarketWindow implements FixWindow {
 
         System.out.println(f);
 
-        sender.sendMessage(f);
+        handler.sendMessage(f);
     }
 
     private void notifyOwner(Listing l) {
@@ -193,7 +185,7 @@ public class MarketWindow implements FixWindow {
 
         System.out.println(f);
 
-        sender.sendMessage(f);
+        handler.sendMessage(f);
     }
 
     private void rejectOrder(Fix f) {
@@ -202,7 +194,7 @@ public class MarketWindow implements FixWindow {
         ff.addTag(Fix.DESTINATION_ID, f.getTag(Fix.SENDER_ID));
         ff.addTag(Fix.SIDE, f.getTag(Fix.SIDE));
 
-        sender.sendMessage(ff);
+        handler.sendMessage(ff);
     }
 
 }

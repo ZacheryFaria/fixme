@@ -1,18 +1,16 @@
 package zfaria.fixme.broker;
 
+import static zfaria.fixme.core.net.TradeBootstrap.handler;
 import zfaria.fixme.core.instruments.Listing;
 import zfaria.fixme.core.notation.Fix;
-import zfaria.fixme.core.notation.FixSenderHandler;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
 
 import javax.swing.*;
 import java.awt.*;
-import java.math.BigDecimal;
 
-public class BrokerWindow implements FixWindow {
+public class BrokerWindow extends FixWindow {
 
-    private JFrame window;
     private JTextArea log;
     private JScrollPane logPane;
     private JTextField symbol;
@@ -25,14 +23,8 @@ public class BrokerWindow implements FixWindow {
     private JTable holdingsTable;
     private Holdings holdings = new Holdings();
 
-    private FixSenderHandler sender;
-
     public BrokerWindow() {
-        window = new JFrame("Broker");
-        window.setVisible(true);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setSize(640, 480);
-        window.setLayout(new GridBagLayout());
+        super("Broker");
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
@@ -91,17 +83,11 @@ public class BrokerWindow implements FixWindow {
         updateFunds();
         window.add(funds, c);
 
-        //holdings.addHolding(new Listing("TSLA", 100, new BigDecimal("123"), 0));
-
         window.pack();
     }
 
     public void addMessage(String msg) {
         log.append(msg + "\n");
-    }
-
-    public void addSender(FixSenderHandler handler) {
-        this.sender = handler;
     }
 
     /**
@@ -111,7 +97,7 @@ public class BrokerWindow implements FixWindow {
     private void placeOrder(String orderType) {
         Fix f = new Fix(Fix.MSG_NEW_ORDER);
         f.addTag(Fix.SIDE, orderType);
-        f.addTag(Fix.SENDER_ID, Integer.toString(sender.getId()));
+        f.addTag(Fix.SENDER_ID, Integer.toString(handler.getId()));
         f.addTag(Fix.SYMBOL, symbol.getText());
         f.addTag(Fix.PRICE, price.getText());
         f.addTag(Fix.ORDERQTY, quantity.getText());
@@ -124,7 +110,7 @@ public class BrokerWindow implements FixWindow {
         }
 
         if (sendMessage) {
-            sender.sendMessage(f);
+            handler.sendMessage(f);
         } else {
             addMessage("Not enough inventory.");
         }
