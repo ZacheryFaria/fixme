@@ -1,16 +1,20 @@
 package zfaria.fixme.market;
 
-import static zfaria.fixme.core.net.TradeBootstrap.handler;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Ints;
 import zfaria.fixme.core.database.Database;
-import zfaria.fixme.core.instruments.Listing;
+import zfaria.fixme.core.transaction.Listing;
 import zfaria.fixme.core.net.TradeBootstrap;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.fix.Fix;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
+import zfaria.fixme.core.transaction.Transaction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+
+import static zfaria.fixme.core.net.TradeBootstrap.handler;
 
 public class MarketWindow extends FixWindow {
 
@@ -23,7 +27,7 @@ public class MarketWindow extends FixWindow {
 
     private JTable tradeTable;
 
-    private TradeList list = new TradeList();
+    private TradeList tradeList = new TradeList();
 
     public MarketWindow() {
         super("Market");
@@ -48,7 +52,7 @@ public class MarketWindow extends FixWindow {
         c.gridx = 3;
         c.gridwidth = 1;
         c.ipadx = 150;
-        tradeTable = new JTable(list);
+        tradeTable = new JTable(tradeList);
         tradeTable.setFillsViewportHeight(true);
         window.add(new JScrollPane(tradeTable), c);
 
@@ -71,11 +75,15 @@ public class MarketWindow extends FixWindow {
         c.gridy = 2;
         add = new JButton("Add");
         add.addActionListener(actionEvent -> {
-            String symb = symbol.getText();
-            int qty = Integer.parseInt(quantity.getText());
-            double pric = Double.parseDouble(price.getText());
+            String symb = symbol.getText().toUpperCase();
+            Integer qty = Ints.tryParse(quantity.getText());
+            Double pric = Doubles.tryParse(price.getText());
+            if (qty == null || pric == null) {
+                addMessage("Quantity or pric are not numbers.");
+                return;
+            }
             Database.addNewListing(new Listing(symb, qty, pric, 0));
-            tradeTable.updateUI();
+            tradeList.updateList();
         });
         window.add(add, c);
 
@@ -87,6 +95,7 @@ public class MarketWindow extends FixWindow {
     }
 
     public void fireOrderEvent(Fix message) {
+        message.addTag(Fix.SYMBOL, message.getTag(Fix.SYMBOL).toUpperCase());
         log.append(message + "\n");
         tradeTable.updateUI();
         if (message.getTag(Fix.SIDE).equals(Fix.SIDE_SELL)) {
@@ -124,25 +133,19 @@ public class MarketWindow extends FixWindow {
                 continue;
             }
 
-            Double maxDouble = Math.floor(funds / l.getPrice());
-            int max = maxDouble.intValue(); // maximum amount of stock can purchase
-            max = Integer.min(max, want.getQty());
-            max = Integer.min(max, l.getQty());
-            if (max == 0) {
-                break;
-            }
+            int shares = getBuyableShares(funds, want, l);
 
-            Listing transaction = l.handleOrder(max);
+            Transaction transaction = l.fillOrder(shares);
 
-            funds -= transaction.getValue();
-            want.removeQty(transaction.getQty());
-
-            Database.addTransaction(transaction, buyer);
+            l.removeQty(transaction.getQuantity());
             Database.modifyListing(l);
 
-            notifyBuyer(transaction, buyer);
+            Database.addTransaction(transaction, buyer);
 
-            notifyOwner(transaction);
+            want.removeQty(transaction.getQuantity());
+            funds -= transaction.getValue();
+
+            notifyParties(transaction, buyer, l.getOwnerId());
 
             boughtStock = true;
 
@@ -158,33 +161,19 @@ public class MarketWindow extends FixWindow {
         }
     }
 
-    private void notifyBuyer(Listing l, int destination) {
+    private void notifyParties(Transaction transaction, int buyer, int seller) {
         Fix f = new Fix(Fix.MSG_NEW_ORDER);
         f.addTag(Fix.ORDSTATUS, Fix.ORDSTATUS_PARTIAL);
         f.addTag(Fix.SIDE, Fix.SIDE_BUY);
-        f.addTag(Fix.ORDERQTY, l.getQty());
-        f.addTag(Fix.SYMBOL, l.getName());
-        f.addTag(Fix.PRICE, l.getPrice());
-        f.addTag(Fix.DESTINATION_ID, destination);
+        f.addTag(Fix.ORDERQTY, transaction.getQuantity());
+        f.addTag(Fix.SYMBOL, transaction.getSymbol());
+        f.addTag(Fix.PRICE, transaction.getPrice());
         f.addTag(Fix.SENDER_ID, 0);
 
-        System.out.println(f);
-
+        f.addTag(Fix.DESTINATION_ID, buyer);
         handler.sendMessage(f);
-    }
 
-    private void notifyOwner(Listing l) {
-        Fix f = new Fix(Fix.MSG_NEW_ORDER);
-        f.addTag(Fix.ORDSTATUS, Fix.ORDSTATUS_PARTIAL);
-        f.addTag(Fix.SIDE, Fix.SIDE_SELL);
-        f.addTag(Fix.ORDERQTY, l.getQty());
-        f.addTag(Fix.SYMBOL, l.getName());
-        f.addTag(Fix.PRICE, l.getPrice());
-        f.addTag(Fix.DESTINATION_ID, l.getOwnerId());
-        f.addTag(Fix.SENDER_ID, 0);
-
-        System.out.println(f);
-
+        f.addTag(Fix.DESTINATION_ID, seller);
         handler.sendMessage(f);
     }
 
@@ -197,4 +186,11 @@ public class MarketWindow extends FixWindow {
         handler.sendMessage(ff);
     }
 
+    private int getBuyableShares(double funds, Listing want, Listing l) {
+        Double maxDouble = Math.floor(funds / l.getPrice());
+        int max = maxDouble.intValue(); // maximum amount of stock can purchase
+        max = Ints.min(max, want.getQty(), l.getQty());
+
+        return max;
+    }
 }

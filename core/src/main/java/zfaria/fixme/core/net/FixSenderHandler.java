@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.fix.Fix;
 import zfaria.fixme.core.swing.FixWindow;
 
 import java.util.HashMap;

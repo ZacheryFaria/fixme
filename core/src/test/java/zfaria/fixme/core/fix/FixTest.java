@@ -1,8 +1,9 @@
-package zfaria.fixme.core.notation;
+package zfaria.fixme.core.fix;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class FixTest {
 

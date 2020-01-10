@@ -1,11 +1,9 @@
-package zfaria.fixme.core.instruments;
+package zfaria.fixme.core.transaction;
 
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.fix.Fix;
 
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 public class Listing {
 
@@ -91,18 +89,16 @@ public class Listing {
      * @return A Listing used for the response and to be placed in the transaction database,
      * not an actual listing.
      */
-    public Listing handleOrder(int qty) {
+    public Transaction fillOrder(int qty) {
         int filledQty = 0;
 
         if (qty <= this.qty) {
-            this.qty -= qty;
             filledQty = qty;
         } else {
             filledQty = this.qty;
-            this.qty = 0;
         }
 
-        Listing l = new Listing(name, filledQty, price, ownerId);
-        return l;
+        Transaction t = new Transaction(name, filledQty, price);
+        return t;
     }
 }

@@ -1,8 +1,8 @@
 package zfaria.fixme.core.database;
 
-import zfaria.fixme.core.instruments.Listing;
+import zfaria.fixme.core.transaction.Listing;
+import zfaria.fixme.core.transaction.Transaction;
 
-import javax.xml.transform.Result;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,7 +94,7 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
 
     public static List<Listing> getListings() {
@@ -104,7 +104,7 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
 
     private static List<Listing> generateListFromResultSet(ResultSet set) throws SQLException {
@@ -155,7 +155,7 @@ public class Database {
         }
     }
 
-    public static void addTransaction(Listing l, int buyer) {
+    public static void addTransaction(Transaction l, int buyer) {
 
     }
 

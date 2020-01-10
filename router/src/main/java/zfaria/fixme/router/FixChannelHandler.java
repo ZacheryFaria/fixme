@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.fix.Fix;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,12 +88,11 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
         ByteBuf buf = Unpooled.buffer(buff.length + 1);
         buf.writeByte(buff.length);
         buf.writeBytes(buff);
-        ctx.writeAndFlush(buf.copy());
+        ctx.writeAndFlush(buf);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
         ctx.close();
     }
 

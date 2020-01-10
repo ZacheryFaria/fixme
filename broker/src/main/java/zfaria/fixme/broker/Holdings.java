@@ -1,10 +1,9 @@
 package zfaria.fixme.broker;
 
-import zfaria.fixme.core.instruments.Listing;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.transaction.Listing;
+import zfaria.fixme.core.fix.Fix;
 
 import javax.swing.table.AbstractTableModel;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

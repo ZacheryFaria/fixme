@@ -1,8 +1,6 @@
 package zfaria.fixme.core.swing;
 
-import zfaria.fixme.core.net.TradeBootstrap;
-import zfaria.fixme.core.notation.Fix;
-import zfaria.fixme.core.net.FixSenderHandler;
+import zfaria.fixme.core.fix.Fix;
 
 import javax.swing.*;
 import java.awt.*;

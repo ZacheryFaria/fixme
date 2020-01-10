@@ -1,6 +1,9 @@
-package zfaria.fixme.core.notation;
+package zfaria.fixme.core.fix;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Fix {
 
@@ -52,7 +55,6 @@ public class Fix {
         tag.put(SIZE, calcSize());
 
         tag.put(MSG_TYPE, msgType);
-
     }
 
     public Fix(byte[] buffer) {

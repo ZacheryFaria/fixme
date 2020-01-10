@@ -1,17 +1,35 @@
 package zfaria.fixme.market;
 
 import zfaria.fixme.core.database.Database;
-import zfaria.fixme.core.instruments.Listing;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.transaction.Listing;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TradeList extends AbstractTableModel {
 
     private String[] columnNames = {"Symbol", "Qty", "Price", "Owner"};
 
+    private List<Listing> list = new ArrayList<>();
+
     public TradeList() {
+        Thread t = new Thread(() -> {
+            while (true) {
+                updateList();
+                try {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+                }
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    public void updateList() {
+        list = Database.getListings();
+        fireTableDataChanged();
     }
 
     @Override
@@ -21,7 +39,7 @@ public class TradeList extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        return Database.getListingCount();
+        return list.size();
     }
 
     @Override
@@ -31,7 +49,6 @@ public class TradeList extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int i, int i1) {
-        List<Listing> list = Database.getListings();
         if (i >= list.size()) {
             return null;
         }

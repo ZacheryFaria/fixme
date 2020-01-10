@@ -1,13 +1,14 @@
 package zfaria.fixme.broker;
 
-import static zfaria.fixme.core.net.TradeBootstrap.handler;
-import zfaria.fixme.core.instruments.Listing;
-import zfaria.fixme.core.notation.Fix;
+import zfaria.fixme.core.transaction.Listing;
+import zfaria.fixme.core.fix.Fix;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
 
 import javax.swing.*;
 import java.awt.*;
+
+import static zfaria.fixme.core.net.TradeBootstrap.handler;
 
 public class BrokerWindow extends FixWindow {
 
