@@ -26,7 +26,6 @@ public class Fix {
     public static final String ORDSTATUS_ACKNOWLEDGE = "0";
     public static final String ORDSTATUS_REJECTED = "8";
     public static final String ORDSTATUS_PARTIAL = "1";
-    public static final String ORDSTATUS_COMPLETE = "2";
 
     public static final String ORDERQTY = "38";
 
@@ -42,8 +41,8 @@ public class Fix {
     // Amount of funds broker has, used buying
     public static final String FUNDS = "499";
 
-    // Self implemented. Refers to the given id of the broker / router.
-    // Not part of official FIX protocol
+    // Non-standard
+    // Refers to the router-assigned id of the broker / market
     public static final String CONNECT_ID = "500";
 
     private Map<String, String> tag = new LinkedHashMap<>();
@@ -99,20 +98,21 @@ public class Fix {
             if (e.getKey().equals(VERSION) || e.getKey().equals(SIZE)) {
                 continue;
             }
-            len += getSize(e.getKey(), e.getValue());
+            len += getTagSize(e.getKey(), e.getValue());
         }
         return Integer.toString(len);
     }
 
     /**
-     * Returns the total length of the message, used for transit integrity.
+     * Returns the total length of the message
+     * Used for serialization.
      * @return
      */
-    public int getTotalLength() {
+    private int getTotalLength() {
         int size = 0;
 
         for (Map.Entry<String, String> e : tag.entrySet()) {
-            size += getSize(e.getKey(), e.getValue());
+            size += getTagSize(e.getKey(), e.getValue());
         }
         size += 6 + 1;
         return size;
@@ -173,7 +173,7 @@ public class Fix {
         return sb.toString();
     }
 
-    public int getSize(String k, String v) {
-        return k.length() + v.length() + 2;
+    public int getTagSize(String k, String v) {
+        return k.length() + v.length() + 2; // we add 2 for the '=' and the SOH byte
     }
 }

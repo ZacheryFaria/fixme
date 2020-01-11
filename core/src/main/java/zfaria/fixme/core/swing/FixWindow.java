@@ -16,10 +16,6 @@ public abstract class FixWindow {
         window.setLayout(new GridBagLayout());
     }
 
-    public void updateInternalHandler() {
-
-    }
-
     public abstract void addMessage(String msg);
 
     /**

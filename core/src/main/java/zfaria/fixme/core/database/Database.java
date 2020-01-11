@@ -43,17 +43,6 @@ public class Database {
         }
     }
 
-    public static int getListingCount() {
-        String sql = "SELECT COUNT(id) FROM listings";
-        try (PreparedStatement state = conn.prepareStatement(sql)) {
-            ResultSet set = state.executeQuery();
-            return set.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
     public static int addNewListing(Listing l) {
         String sql = "INSERT into listings (owner, symbol, price, quantity) values (?, ?, ?, ?)";
         try (PreparedStatement state = conn.prepareStatement(sql)) {
@@ -69,41 +58,6 @@ public class Database {
             e.printStackTrace();
         }
         return -1;
-    }
-
-    public static void removeListingsOfOwner(int id) {
-        String sql = "DELETE FROM listings where owner = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static Listing getListingById(int id) {
-        String sql = "SELECT * FROM listings WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet set = stmt.executeQuery();
-            Listing listing = new Listing(set);
-            set.close();
-            return listing;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static List<Listing> getListingByOwner(int id) {
-        String sql = "SELECT * FROM listings WHERE owner = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return generateListFromResultSet(stmt.executeQuery());
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return new ArrayList<>();
     }
 
     public static List<Listing> getListings() {
@@ -139,7 +93,7 @@ public class Database {
     public static void modifyListing(Listing l) {
         String sql = "update listings set quantity = ? where id = ?";
 
-        // If the quantity is zero we are goign to just remove it.
+        // If the quantity is zero we are going to just remove it.
         if (l.getQty() <= 0) {
             removeListing(l);
             return;

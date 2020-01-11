@@ -3,11 +3,11 @@ package zfaria.fixme.market;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import zfaria.fixme.core.database.Database;
-import zfaria.fixme.core.transaction.Listing;
-import zfaria.fixme.core.net.TradeBootstrap;
 import zfaria.fixme.core.fix.Fix;
+import zfaria.fixme.core.net.TradeBootstrap;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
+import zfaria.fixme.core.transaction.Listing;
 import zfaria.fixme.core.transaction.Transaction;
 
 import javax.swing.*;

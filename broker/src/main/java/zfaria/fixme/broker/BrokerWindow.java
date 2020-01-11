@@ -1,9 +1,9 @@
 package zfaria.fixme.broker;
 
-import zfaria.fixme.core.transaction.Listing;
 import zfaria.fixme.core.fix.Fix;
 import zfaria.fixme.core.swing.FixWindow;
 import zfaria.fixme.core.swing.VanishingTextField;
+import zfaria.fixme.core.transaction.Listing;
 
 import javax.swing.*;
 import java.awt.*;
@@ -99,7 +99,7 @@ public class BrokerWindow extends FixWindow {
         Fix f = new Fix(Fix.MSG_NEW_ORDER);
         f.addTag(Fix.SIDE, orderType);
         f.addTag(Fix.SENDER_ID, Integer.toString(handler.getId()));
-        f.addTag(Fix.SYMBOL, symbol.getText());
+        f.addTag(Fix.SYMBOL, symbol.getText().toUpperCase());
         f.addTag(Fix.PRICE, price.getText());
         f.addTag(Fix.ORDERQTY, quantity.getText());
         f.addTag(Fix.FUNDS, holdings.funds);
@@ -118,7 +118,7 @@ public class BrokerWindow extends FixWindow {
     }
 
     public void updateFunds() {
-        funds.setText(String.format("Funds $%f", holdings.funds));
+        funds.setText(String.format("Funds $%.2f", holdings.funds));
     }
 
     /**

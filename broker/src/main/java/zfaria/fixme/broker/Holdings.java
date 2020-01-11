@@ -1,7 +1,7 @@
 package zfaria.fixme.broker;
 
-import zfaria.fixme.core.transaction.Listing;
 import zfaria.fixme.core.fix.Fix;
+import zfaria.fixme.core.transaction.Listing;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -93,5 +93,4 @@ public class Holdings extends AbstractTableModel {
             funds += l.getValue();
         }
     }
-
 }
