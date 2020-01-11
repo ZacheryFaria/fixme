@@ -84,11 +84,7 @@ public class FixChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendMessage(ChannelHandlerContext ctx, Fix f) {
-        byte[] buff = f.serialize();
-        ByteBuf buf = Unpooled.buffer(buff.length + 1);
-        buf.writeByte(buff.length);
-        buf.writeBytes(buff);
-        ctx.writeAndFlush(buf);
+        ctx.writeAndFlush(f);
     }
 
     @Override

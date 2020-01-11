@@ -89,7 +89,7 @@ public class Listing {
      * @return A Listing used for the response and to be placed in the transaction database,
      * not an actual listing.
      */
-    public Transaction fillOrder(int qty) {
+    public Transaction fillOrder(int qty, int buyer) {
         int filledQty = 0;
 
         if (qty <= this.qty) {
@@ -98,7 +98,7 @@ public class Listing {
             filledQty = this.qty;
         }
 
-        Transaction t = new Transaction(name, filledQty, price);
+        Transaction t = new Transaction(name, filledQty, price, buyer, getOwnerId());
         return t;
     }
 }

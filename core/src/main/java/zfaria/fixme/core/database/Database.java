@@ -13,7 +13,7 @@ public class Database {
 
     static {
         try {
-            String url = "jdbc:sqlite:test.db";
+            String url = "jdbc:sqlite:fixme.db";
             conn = DriverManager.getConnection(url);
             init();
         } catch (SQLException e) {
@@ -29,6 +29,15 @@ public class Database {
                     "symbol CHAR(8)          NOT NULL," +
                     "price  DECIMAL(10, 5)  NOT NULL," +
                     "quantity INTEGER NOT NULL)");
+
+            state.executeUpdate("CREATE TABLE IF NOT EXISTS transactions (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "buyer INTEGER," +
+                    "seller INTEGER," +
+                    "symbol CHAR(8)," +
+                    "price DECIMAL(10, 5)," +
+                    "quantity INTEGER" +
+                    ");");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -155,9 +164,17 @@ public class Database {
         }
     }
 
-    public static void addTransaction(Transaction l, int buyer) {
-
+    public static void addTransaction(Transaction t, int buyer) {
+        String sql = "INSERT into transactions (seller, buyer, symbol, price, quantity) values (?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, t.getSeller());
+            stmt.setInt(2, t.getBuyer());
+            stmt.setString(3, t.getSymbol());
+            stmt.setDouble(4, t.getPrice());
+            stmt.setInt(5, t.getQuantity());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
-
-
 }

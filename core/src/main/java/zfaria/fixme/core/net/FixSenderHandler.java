@@ -1,7 +1,5 @@
 package zfaria.fixme.core.net;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import zfaria.fixme.core.fix.Fix;
@@ -22,7 +20,6 @@ public class FixSenderHandler extends SimpleChannelInboundHandler {
 
     public FixSenderHandler(FixWindow window) {
         this.window = window;
-        //this.window.addMessage("Connecting...");
 
         dispatch = new HashMap<>();
         dispatch.put(Fix.MSG_CONNECT, ((ctx, f) -> {
@@ -48,28 +45,13 @@ public class FixSenderHandler extends SimpleChannelInboundHandler {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object o) {
-        ByteBuf buf = (ByteBuf)o;
+        Fix f = (Fix)o;
 
-        while (buf.isReadable()) {
-            byte len = buf.readByte();
-            byte[] buff = new byte[len];
-            buf.readBytes(buff);
-
-            Fix f = new Fix(buff);
-
-            dispatch.get(f.getTag(Fix.MSG_TYPE)).notify(ctx, f);
-        }
+        dispatch.get(f.getTag(Fix.MSG_TYPE)).notify(ctx, f);
     }
 
     public void sendMessage(Fix f) {
-        byte[] buff = f.serialize();
-
-        ByteBuf buf = Unpooled.buffer(buff.length);
-
-        buf.writeByte(buff.length);
-        buf.writeBytes(buff);
-
-        ctx.writeAndFlush(buf);
+        ctx.writeAndFlush(f);
     }
 
     public int getId() {

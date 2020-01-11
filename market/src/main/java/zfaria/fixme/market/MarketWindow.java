@@ -135,7 +135,7 @@ public class MarketWindow extends FixWindow {
 
             int shares = getBuyableShares(funds, want, l);
 
-            Transaction transaction = l.fillOrder(shares);
+            Transaction transaction = l.fillOrder(shares, buyer);
 
             l.removeQty(transaction.getQuantity());
             Database.modifyListing(l);
@@ -164,15 +164,16 @@ public class MarketWindow extends FixWindow {
     private void notifyParties(Transaction transaction, int buyer, int seller) {
         Fix f = new Fix(Fix.MSG_NEW_ORDER);
         f.addTag(Fix.ORDSTATUS, Fix.ORDSTATUS_PARTIAL);
-        f.addTag(Fix.SIDE, Fix.SIDE_BUY);
         f.addTag(Fix.ORDERQTY, transaction.getQuantity());
         f.addTag(Fix.SYMBOL, transaction.getSymbol());
         f.addTag(Fix.PRICE, transaction.getPrice());
         f.addTag(Fix.SENDER_ID, 0);
 
+        f.addTag(Fix.SIDE, Fix.SIDE_BUY);
         f.addTag(Fix.DESTINATION_ID, buyer);
         handler.sendMessage(f);
 
+        f.addTag(Fix.SIDE, Fix.SIDE_SELL);
         f.addTag(Fix.DESTINATION_ID, seller);
         handler.sendMessage(f);
     }

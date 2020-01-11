@@ -34,6 +34,8 @@ public class TradeBootstrap {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 protected void initChannel(SocketChannel socketChannel) {
+                    socketChannel.pipeline().addLast(new FixMessageEncoder());
+                    socketChannel.pipeline().addLast(new FixMessageDecoder());
                     socketChannel.pipeline().addLast(handler);
                 }
             });
